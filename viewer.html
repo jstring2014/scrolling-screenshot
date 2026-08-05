@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title data-i18n="viewerTitle">Long screenshot preview</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f6f9;
+      --bar: rgba(255, 255, 255, .9);
+      --fg: #1f2329;
+      --sub: #646a73;
+      --line: #dfe4ec;
+      --button: #ffffff;
+      --primary: #1677ff;
+      --shadow: 0 10px 32px rgba(31, 35, 41, .16);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #171a20;
+        --bar: rgba(29, 32, 38, .9);
+        --fg: #eef2f8;
+        --sub: #a8b0bd;
+        --line: #343b47;
+        --button: #252a33;
+        --primary: #4d91ff;
+        --shadow: none;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .bar {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      /* Longer translations (de/ru) would push the toolbar off-screen in a
+         narrow window, so let it wrap onto a second line instead. */
+      flex-wrap: wrap;
+      gap: 16px;
+      min-height: 54px;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--bar);
+      backdrop-filter: blur(10px);
+    }
+    .title {
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .meta {
+      margin-top: 2px;
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+    button {
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--button);
+      color: var(--fg);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 650;
+    }
+    button.on {
+      border-color: transparent;
+      background: var(--primary);
+      color: #fff;
+    }
+    #imgs {
+      padding: 18px 14px 56px;
+    }
+    .shot {
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 auto 18px;
+    }
+    .shot-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      color: var(--sub);
+      font-size: 12px;
+    }
+    .shot img {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      margin: 0 auto;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+    body.actual .shot,
+    body.actual .shot img {
+      max-width: none;
+    }
+    .empty {
+      padding: 80px 20px;
+      text-align: center;
+      color: var(--sub);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <div class="title">
+      <div id="barTitle" data-i18n="viewerTitle">Long screenshot preview</div>
+      <div class="meta" id="barMeta" data-i18n="viewerReading">Reading…</div>
+    </div>
+    <div class="tools">
+      <button id="fit" class="on" data-i18n="viewerFit">Fit width</button>
+      <button id="actual" data-i18n="viewerActual">Actual size</button>
+      <button id="downloadAll" data-i18n="viewerDownload">Download</button>
+    </div>
+  </div>
+  <main id="imgs"></main>
+  <script src="i18n.js"></script>
+  <script src="viewer.js"></script>
+</body>
+</html>

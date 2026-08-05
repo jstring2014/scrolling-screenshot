@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #ffffff;
+      --fg: #1f2329;
+      --sub: #646a73;
+      --muted: #8a8f99;
+      --line: #e6e8eb;
+      --soft: #f5f7fb;
+      --chip-bg: #eef3ff;
+      --primary: #1677ff;
+      --primary-hover: #0f64d8;
+      --danger: #e5484d;
+      --success: #14a36f;
+      --track: #edf1f7;
+      --shadow: 0 8px 24px rgba(20, 43, 90, .10);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1d2026;
+        --fg: #eef2f8;
+        --sub: #b4bbc7;
+        --muted: #8d96a6;
+        --line: #353b46;
+        --soft: #252a33;
+        --chip-bg: #26354f;
+        --primary: #4d91ff;
+        --primary-hover: #6aa3ff;
+        --danger: #ff6b70;
+        --success: #3dd59f;
+        --track: #313743;
+        --shadow: none;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      width: 320px;
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+    }
+    .head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .app-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    h1 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.25;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    p.sub {
+      margin: 2px 0 0;
+      color: var(--sub);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .field { margin-bottom: 14px; }
+    .field > label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 7px;
+      color: var(--sub);
+      font-size: 12px;
+    }
+    .seg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--soft);
+    }
+    .seg button {
+      min-width: 0;
+      padding: 8px 6px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--fg);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 650;
+      transition: background .15s, color .15s, box-shadow .15s;
+    }
+    .seg button small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 1.1;
+    }
+    .seg button.on {
+      background: var(--bg);
+      color: var(--primary);
+      box-shadow: 0 1px 4px rgba(20, 43, 90, .12);
+    }
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 2px 0 16px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+      cursor: pointer;
+      user-select: none;
+    }
+    .switch-row b {
+      display: block;
+      font-size: 13px;
+      line-height: 1.25;
+    }
+    .switch-row small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+    .switch-row input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .switch {
+      position: relative;
+      flex: 0 0 auto;
+      width: 38px;
+      height: 22px;
+      border-radius: 999px;
+      background: #c9d1df;
+      transition: background .15s;
+    }
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
+      transition: transform .15s;
+    }
+    .switch-row input:checked + .switch { background: var(--primary); }
+    .switch-row input:checked + .switch::after { transform: translateX(16px); }
+    button.primary,
+    button.ghost {
+      width: 100%;
+      min-height: 38px;
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      transition: background .15s, color .15s, opacity .15s;
+    }
+    button.primary {
+      color: #fff;
+      background: var(--primary);
+    }
+    button.primary:hover { background: var(--primary-hover); }
+    button.ghost {
+      color: var(--fg);
+      background: var(--soft);
+      border: 1px solid var(--line);
+    }
+    button.danger {
+      color: #fff;
+      background: var(--danger);
+      border: 0;
+    }
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .status-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    #stage {
+      color: var(--fg);
+      font-weight: 700;
+    }
+    #percent {
+      color: var(--primary);
+      font-weight: 700;
+    }
+    .bar {
+      height: 7px;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--track);
+    }
+    .bar > i {
+      display: block;
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #1677ff, #0bbf9a);
+      transition: width .2s;
+    }
+    #status {
+      min-height: 34px;
+      margin: 10px 0 12px;
+      color: var(--sub);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .result-head,
+    .error-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      background: var(--soft);
+      border: 1px solid var(--line);
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      margin-top: 4px;
+      border-radius: 50%;
+      background: var(--success);
+      flex: 0 0 auto;
+    }
+    .dot.error { background: var(--danger); }
+    #doneMsg,
+    #errMsg {
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    #doneMeta {
+      margin-top: 2px;
+      color: var(--sub);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    #preview {
+      margin-top: 6px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      max-height: 230px;
+      overflow-y: auto;
+      background: var(--soft);
+    }
+    #preview:empty { display: none; }
+    #preview img {
+      display: block;
+      width: 100%;
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header class="head">
+    <img class="app-icon" src="icons/icon48.png" alt="" />
+    <div>
+      <h1 data-i18n="popupTitle">Full Page Screenshot</h1>
+      <p class="sub" data-i18n="popupSubtitle">Capture this page as one long image</p>
+    </div>
+  </header>
+
+  <section id="view-idle">
+    <div class="field">
+      <label data-i18n="popupFormatLabel">Image format</label>
+      <div class="seg" id="fmt">
+        <button data-fmt="png" class="on"><span data-i18n="popupFormatPng">PNG</span><small data-i18n="popupFormatPngHint">Sharper</small></button>
+        <button data-fmt="jpeg"><span data-i18n="popupFormatJpeg">JPEG</span><small data-i18n="popupFormatJpegHint">Smaller</small></button>
+      </div>
+    </div>
+    <label class="switch-row">
+      <span>
+        <b data-i18n="popupHideFixed">Hide sticky headers &amp; footers</b>
+        <small data-i18n="popupHideFixedHint">Avoids repeated content</small>
+      </span>
+      <input type="checkbox" id="hideFixed" checked />
+      <i class="switch"></i>
+    </label>
+    <button class="primary" id="start" data-i18n="popupStart">Capture</button>
+  </section>
+
+  <section id="view-busy" class="hidden">
+    <div class="status-head">
+      <span id="stage" data-i18n="stagePreparing">Preparing</span>
+      <span id="percent">0%</span>
+    </div>
+    <div class="bar"><i id="barFill"></i></div>
+    <div id="status" data-i18n="statusPreparing">Preparing the page…</div>
+    <button class="ghost danger" id="cancel" data-i18n="popupCancel">Cancel</button>
+  </section>
+
+  <section id="view-done" class="hidden">
+    <div class="result-head">
+      <i class="dot"></i>
+      <div>
+        <div id="doneMsg" data-i18n="doneSaved">Saved to your Downloads folder</div>
+        <div id="doneMeta"></div>
+      </div>
+    </div>
+    <div id="preview"></div>
+    <div class="row">
+      <button class="primary" id="openImg" data-i18n="popupOpenViewer">Open preview</button>
+      <button class="ghost" id="again" data-i18n="popupAgain">Capture again</button>
+    </div>
+  </section>
+
+  <section id="view-error" class="hidden">
+    <div class="error-box">
+      <i class="dot error"></i>
+      <div id="errMsg"></div>
+    </div>
+    <button class="primary" id="retry" data-i18n="popupRetry">Try again</button>
+  </section>
+
+  <script src="i18n.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

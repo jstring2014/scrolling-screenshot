@@ -1,0 +1,245 @@
+{
+  "localeCode": {
+    "message": "en",
+    "description": "BCP 47 language tag for this locale, used as the <html lang> value."
+  },
+  "listSeparator": {
+    "message": ", ",
+    "description": "Separator used when joining short status fragments in a sentence."
+  },
+
+  "extensionName": {
+    "message": "Scrolling Screenshot — Full Page & In-Page Scroll Area Capture"
+  },
+  "extensionShortName": {
+    "message": "ScrollShot"
+  },
+  "extensionDescription": {
+    "message": "Capture a whole page — or a panel that scrolls inside it — as one long PNG or JPEG. Runs entirely on your device."
+  },
+  "actionTitle": {
+    "message": "Capture full-page screenshot"
+  },
+  "commandDescription": {
+    "message": "Open full-page screenshot popup"
+  },
+
+  "popupTitle": {
+    "message": "Full Page Screenshot"
+  },
+  "popupSubtitle": {
+    "message": "Capture this page as one long image"
+  },
+  "popupFormatLabel": {
+    "message": "Image format"
+  },
+  "popupFormatPng": {
+    "message": "PNG"
+  },
+  "popupFormatPngHint": {
+    "message": "Sharper"
+  },
+  "popupFormatJpeg": {
+    "message": "JPEG"
+  },
+  "popupFormatJpegHint": {
+    "message": "Smaller"
+  },
+  "popupHideFixed": {
+    "message": "Hide sticky headers & footers"
+  },
+  "popupHideFixedHint": {
+    "message": "Avoids repeated content"
+  },
+  "popupStart": {
+    "message": "Capture"
+  },
+  "popupCancel": {
+    "message": "Cancel"
+  },
+  "popupCancelling": {
+    "message": "Cancelling"
+  },
+  "popupOpenViewer": {
+    "message": "Open preview"
+  },
+  "popupAgain": {
+    "message": "Capture again"
+  },
+  "popupRetry": {
+    "message": "Try again"
+  },
+  "popupPreviewAlt": {
+    "message": "Long screenshot preview"
+  },
+
+  "stagePreparing": {
+    "message": "Preparing"
+  },
+  "stageLoading": {
+    "message": "Loading content"
+  },
+  "stageCapturing": {
+    "message": "Capturing"
+  },
+  "stageStitching": {
+    "message": "Stitching"
+  },
+
+  "statusPreparing": {
+    "message": "Preparing the page…"
+  },
+  "statusLoadingPage": {
+    "message": "Loading page content…"
+  },
+  "statusContainerDetected": {
+    "message": "Found an in-page scroll area, loading its content…"
+  },
+  "statusTruncating": {
+    "message": "This page is longer than $MAX$ screens — capturing the first $MAX$.",
+    "placeholders": {
+      "max": { "content": "$1", "example": "80" }
+    }
+  },
+  "statusCapturing": {
+    "message": "Capturing screen $CURRENT$ of $TOTAL$",
+    "placeholders": {
+      "current": { "content": "$1", "example": "3" },
+      "total": { "content": "$2", "example": "12" }
+    }
+  },
+  "statusRemainingSec": {
+    "message": "about $SECONDS$ sec left",
+    "placeholders": {
+      "seconds": { "content": "$1", "example": "18" }
+    }
+  },
+  "statusRemainingMin": {
+    "message": "about $MINUTES$ min left",
+    "placeholders": {
+      "minutes": { "content": "$1", "example": "2" }
+    }
+  },
+  "statusWaitingForTab": {
+    "message": "Waiting for you to switch back to the page being captured…"
+  },
+  "statusStitching": {
+    "message": "Stitching the long image and saving…"
+  },
+  "statusCancelling": {
+    "message": "Cancelling…"
+  },
+
+  "doneSaved": {
+    "message": "Saved to your Downloads folder"
+  },
+  "doneOneImage": {
+    "message": "1 image"
+  },
+  "doneSplit": {
+    "message": "Split into $COUNT$ images",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "doneTruncated": {
+    "message": "Page exceeds the limit — captured the first $DONE$ of $TOTAL$ screens",
+    "placeholders": {
+      "done": { "content": "$1", "example": "80" },
+      "total": { "content": "$2", "example": "140" }
+    }
+  },
+  "doneStoppedEarly": {
+    "message": "Scrolling stopped early, the long image may be incomplete"
+  },
+  "donePreviewFailed": {
+    "message": "Preview cache failed, but the image was saved"
+  },
+
+  "errBusy": {
+    "message": "A capture is already running. Please try again in a moment."
+  },
+  "errNoTab": {
+    "message": "Can't find the active tab."
+  },
+  "errInternalPage": {
+    "message": "Built-in browser pages can't be captured. Please use this on a regular web page."
+  },
+  "errTabSwitched": {
+    "message": "You stayed on another tab too long, so the capture stopped. Go back to the page and try again."
+  },
+  "errNothingCaptured": {
+    "message": "Nothing was captured."
+  },
+  "errCaptureFailed": {
+    "message": "Screen capture failed."
+  },
+  "errContainerStuck": {
+    "message": "The detected in-page scroll area won't scroll — it may be the wrong region. Scroll the content you want with your mouse wheel first, then capture again."
+  },
+  "errPageStuck": {
+    "message": "The page won't scroll. Its content may still be loading, or scrolling is disabled."
+  },
+  "errPortLost": {
+    "message": "The capture was interrupted. Please try again."
+  },
+  "errUnexpected": {
+    "message": "Something went wrong: $DETAIL$",
+    "placeholders": {
+      "detail": { "content": "$1", "example": "Failed to fetch" }
+    }
+  },
+
+  "viewerTitle": {
+    "message": "Long screenshot preview"
+  },
+  "viewerTitleMulti": {
+    "message": "Long screenshot preview ($COUNT$ images)",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "viewerReading": {
+    "message": "Reading…"
+  },
+  "viewerLoadingImages": {
+    "message": "Loading images…"
+  },
+  "viewerFit": {
+    "message": "Fit width"
+  },
+  "viewerActual": {
+    "message": "Actual size"
+  },
+  "viewerDownload": {
+    "message": "Download"
+  },
+  "viewerShot": {
+    "message": "Screenshot"
+  },
+  "viewerShotN": {
+    "message": "Image $INDEX$",
+    "placeholders": {
+      "index": { "content": "$1", "example": "2" }
+    }
+  },
+  "viewerSizeMeta": {
+    "message": "$WIDTH$ x $HEIGHT$ px",
+    "placeholders": {
+      "width": { "content": "$1", "example": "1440" },
+      "height": { "content": "$2", "example": "18320" }
+    }
+  },
+  "viewerCountMeta": {
+    "message": " · $COUNT$ images total",
+    "placeholders": {
+      "count": { "content": "$1", "example": "3" }
+    }
+  },
+  "viewerEmptyCacheFailed": {
+    "message": "Couldn't read the preview cache. Go back to the page, capture again, then reopen this."
+  },
+  "viewerEmptyNoImages": {
+    "message": "No image to show. Go back to the page, capture again, then reopen this."
+  }
+}

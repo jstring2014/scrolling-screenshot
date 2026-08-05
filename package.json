@@ -1,0 +1,14 @@
+{
+  "name": "full-page-screenshot-extension",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "icons": "node tools/generate-icons.mjs",
+    "store-assets": "node tools/generate-store-assets.mjs",
+    "package": "node tools/package-extension.mjs",
+    "release": "npm run icons && npm run store-assets && npm test && npm run package",
+    "check": "node --check background.js && node --check popup.js && node --check viewer.js && node --check tools/generate-icons.mjs && node --check tools/generate-store-assets.mjs && node --check tools/package-extension.mjs && node --check tools/validate-extension.mjs && node tools/validate-extension.mjs",
+    "test": "npm run check && npm run test:e2e",
+    "test:e2e": "node tools/e2e-capture.mjs"
+  }
+}

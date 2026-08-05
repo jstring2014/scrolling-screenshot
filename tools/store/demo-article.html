@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Field Notes — Designing for Long Pages</title>
+<style>
+  :root { --ink:#151922; --sub:#5b6472; --line:#e6e9ef; --accent:#2f6df6; --soft:#f6f8fc; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:#fff; color:var(--ink);
+         font:16px/1.75 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+  header.site { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:24px;
+                padding:14px 40px; background:rgba(255,255,255,.88); backdrop-filter:blur(12px);
+                border-bottom:1px solid var(--line); }
+  .brand { display:flex; align-items:center; gap:9px; font-weight:800; letter-spacing:-.01em; }
+  .brand i { width:22px; height:22px; border-radius:6px; background:linear-gradient(135deg,#2f6df6,#12b3a0); display:block; }
+  nav a { margin-right:22px; color:var(--sub); text-decoration:none; font-size:14px; font-weight:600; }
+  nav a:first-child { color:var(--ink); }
+  main { max-width:760px; margin:0 auto; padding:56px 32px 96px; }
+  .kicker { color:var(--accent); font-weight:700; font-size:13px; letter-spacing:.08em; text-transform:uppercase; }
+  h1 { font-size:44px; line-height:1.15; letter-spacing:-.025em; margin:12px 0 16px; }
+  .lede { font-size:19px; color:var(--sub); margin:0 0 28px; }
+  .byline { display:flex; align-items:center; gap:10px; padding-bottom:28px; border-bottom:1px solid var(--line);
+            color:var(--sub); font-size:14px; }
+  .avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#f6a23c,#f0577a); }
+  h2 { font-size:26px; letter-spacing:-.02em; margin:44px 0 12px; }
+  p { margin:0 0 18px; }
+  figure { margin:32px 0; }
+  .shot { height:260px; border-radius:12px; border:1px solid var(--line); }
+  figcaption { margin-top:10px; color:var(--sub); font-size:13px; }
+  blockquote { margin:32px 0; padding:4px 0 4px 22px; border-left:3px solid var(--accent);
+               font-size:20px; line-height:1.55; letter-spacing:-.01em; }
+  pre { margin:26px 0; padding:18px 20px; border-radius:10px; background:#131722; color:#dfe7f5;
+        font:13px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; overflow:auto; }
+  .tok { color:#7fd1c1; } .key { color:#93b4ff; } .str { color:#f0b37a; }
+  table { width:100%; border-collapse:collapse; margin:26px 0; font-size:14px; }
+  th, td { text-align:left; padding:11px 12px; border-bottom:1px solid var(--line); }
+  th { color:var(--sub); font-size:12px; letter-spacing:.05em; text-transform:uppercase; }
+  .callout { margin:30px 0; padding:18px 20px; border-radius:10px; background:var(--soft); border:1px solid var(--line); }
+  footer { border-top:1px solid var(--line); padding:36px 40px 60px; color:var(--sub); font-size:13px; text-align:center; }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="brand"><i></i> Field Notes</div>
+  <nav><a href="#">Articles</a><a href="#">Patterns</a><a href="#">Changelog</a><a href="#">About</a></nav>
+</header>
+
+<main>
+  <div class="kicker">Interface Notes</div>
+  <h1>Designing for pages that never end</h1>
+  <p class="lede">Scrolling used to be a way to reach the bottom. Now it is the interface itself — and most of our
+     tools still assume a page fits on a screen.</p>
+  <div class="byline"><span class="avatar"></span><span>Written by the design team · 12 min read · Updated this week</span></div>
+
+  <p>A layout that fits in a viewport is a layout you can reason about. You can point at it, hand it to someone,
+     print it, put it in a slide. The moment content grows past the fold, all of those affordances quietly stop
+     working, and we go looking for workarounds.</p>
+
+  <h2>The fold moved, and then it disappeared</h2>
+  <p>Every measurement we take of real sessions says the same thing: people scroll immediately, they scroll far,
+     and they rarely come back up. The interesting content is almost never in the first screen. Yet the tooling
+     around a page — sharing, reviewing, archiving — is still anchored to that first screen.</p>
+
+  <figure>
+    <div class="shot" style="background:linear-gradient(120deg,#eaf1ff,#dff5f0 55%,#fdeee3)"></div>
+    <figcaption>Session heatmap across 40,000 page views. Depth, not width, is where attention lives.</figcaption>
+  </figure>
+
+  <p>The consequence shows up in review workflows. Someone wants to flag a problem three screens down, so they
+     take a screenshot of the problem and lose all the context above it. Someone else takes five screenshots and
+     pastes them in sequence, and now the reviewer has to reassemble the page in their head.</p>
+
+  <blockquote>“Send me the whole page” is a reasonable request that most tools answer with five separate images.</blockquote>
+
+  <h2>Containers changed the problem</h2>
+  <p>Modern applications rarely scroll the document. The shell is fixed, and the content lives in a panel that
+     scrolls independently — a message list, a data grid, a document body. The page height never changes, so any
+     tool that measures the document sees one screen and stops there.</p>
+
+  <pre><span class="key">const</span> shell = document.querySelector(<span class="str">'.app-shell'</span>);
+<span class="tok">// the document is 1 screen tall; the panel inside it is 60</span>
+shell.scrollHeight === window.innerHeight; <span class="tok">// true</span>
+panel.scrollHeight / panel.clientHeight;   <span class="tok">// 60</span></pre>
+
+  <p>This is why the same capture that works perfectly on a blog produces a single blank screen on a dashboard.
+     The tool is not broken; it is measuring the wrong box.</p>
+
+  <table>
+    <thead><tr><th>Page type</th><th>What scrolls</th><th>Typical depth</th><th>Naive capture</th></tr></thead>
+    <tbody>
+      <tr><td>Article / docs</td><td>The document</td><td>4–12 screens</td><td>Works</td></tr>
+      <tr><td>Admin console</td><td>An inner panel</td><td>10–60 screens</td><td>One screen</td></tr>
+      <tr><td>Data grid</td><td>The table body</td><td>20–200 screens</td><td>One screen</td></tr>
+      <tr><td>Conversation view</td><td>A message list</td><td>Unbounded</td><td>Partial</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Lazy content makes timing part of correctness</h2>
+  <p>Images below the fold do not exist until you scroll to them. Fonts swap in a frame late. Virtualised rows
+     appear and disappear as the scroll position moves. A capture that scrolls faster than the page renders will
+     faithfully record a page that was never visible to anyone.</p>
+
+  <div class="callout"><strong>Rule of thumb.</strong> Never guess with a fixed delay. Wait for the specific thing
+     you depend on — the images in this viewport, the font set, one painted frame — and put a ceiling on the wait
+     so a slow third party cannot stall the whole run.</div>
+
+  <figure>
+    <div class="shot" style="background:linear-gradient(120deg,#fdeee3,#eaf1ff 60%,#e8f7ee)"></div>
+    <figcaption>The same viewport captured 80ms apart, before and after the lazy loader resolves.</figcaption>
+  </figure>
+
+  <h2>Sticky elements are not part of the content</h2>
+  <p>A header that follows you down the page is helpful while reading and actively harmful in a stitched image,
+     where it reappears every screen like a stutter. The fix is not to remove it — the first screen should keep
+     it — but to hide it for everything after, and to be careful not to hide the container the content lives in.</p>
+
+  <h2>What a good long capture actually needs</h2>
+  <p>Measure the right box. Verify the scroll actually moved. Wait for the viewport to settle. Hide repeating
+     furniture after the first screen. Stitch on exact pixel boundaries so no seam shows at fractional zoom.
+     Split the output before the canvas runs out of memory rather than failing at the end.</p>
+
+  <p>None of these are exotic. They are the difference between a tool that works on your blog and a tool that
+     works on the pages where people actually spend their day.</p>
+
+  <figure>
+    <div class="shot" style="background:linear-gradient(120deg,#e8f7ee,#fdf3e2 50%,#eef0ff)"></div>
+    <figcaption>Seam inspection at devicePixelRatio 1.25, 1.5 and 2.</figcaption>
+  </figure>
+
+  <h2>Where it still breaks</h2>
+  <p>Recycled lists remain genuinely out of reach. If a row is destroyed the moment it leaves the viewport, no
+     amount of scrolling will assemble the whole list, because the whole list never exists. That is a limitation
+     worth stating plainly rather than papering over.</p>
+
+  <p>Everything else — the article, the dashboard, the report, the document, the grid — is a solved problem once
+     you stop assuming the document is the thing that scrolls.</p>
+</main>
+
+<footer>Field Notes · A demonstration page · No tracking, no cookies</footer>
+</body>
+</html>

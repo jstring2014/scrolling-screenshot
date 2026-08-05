@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>tall fixture</title>
+<style>
+  html, body { margin: 0; padding: 0; }
+  /* Deterministic colour bands, one per simulated screen, so the stitched image
+     can be checked pixel by pixel: band i must land at exactly i * screenHeight. */
+  .band { width: 100%; font: 700 48px system-ui; color: #fff; padding-top: 20px; box-sizing: border-box; }
+  #topbar { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #000; color: #fff;
+            font: 700 20px system-ui; z-index: 10; }
+</style>
+</head>
+<body>
+<div id="topbar">FIXED HEADER</div>
+<script>
+  const params = new URLSearchParams(location.search);
+  const screens = Number(params.get("screens") || 6);
+  // Band height is set from the real viewport so one band == one captured screen.
+  const h = window.innerHeight;
+  document.body.dataset.bandHeight = String(h);
+  document.body.dataset.screens = String(screens);
+  for (let i = 0; i < screens; i++) {
+    const d = document.createElement("div");
+    d.className = "band";
+    // Encode the index in the red channel so a sampled pixel identifies its band.
+    // Step 3 keeps every band distinct and inside 8 bits up to 84 screens.
+    d.style.background = `rgb(${i * 3 + 3}, 40, 90)`;
+    d.style.height = h + "px";
+    d.textContent = "BAND " + i;
+    document.body.appendChild(d);
+  }
+</script>
+</body>
+</html>

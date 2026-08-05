@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Privacy Policy — Scrolling Screenshot</title>
+<meta name="description" content="Privacy policy for the Scrolling Screenshot browser extension. No data is collected, transmitted, or shared." />
+<style>
+  :root { color-scheme: light dark; --ink:#151922; --sub:#5b6472; --line:#e4e8f0; --accent:#2f6df6; --soft:#f6f8fc; --bg:#fff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --ink:#eef2f8; --sub:#a8b0bd; --line:#2c333f; --accent:#6aa3ff; --soft:#1b1f27; --bg:#14171d; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font:16px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+  main { max-width:760px; margin:0 auto; padding:64px 24px 96px; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.01em; margin-bottom:40px; }
+  .brand i { width:26px; height:26px; border-radius:7px; background:linear-gradient(135deg,#2f6df6,#12b3a0); display:block; }
+  h1 { font-size:38px; line-height:1.15; letter-spacing:-.025em; margin:0 0 8px; }
+  .updated { color:var(--sub); font-size:14px; margin:0 0 32px; }
+  h2 { font-size:21px; letter-spacing:-.015em; margin:38px 0 10px; }
+  p, li { color:var(--ink); }
+  p { margin:0 0 14px; }
+  ul { margin:0 0 14px; padding-left:22px; }
+  li { margin-bottom:8px; }
+  code { background:var(--soft); border:1px solid var(--line); border-radius:5px; padding:1px 6px;
+         font:13.5px ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .callout { margin:24px 0; padding:18px 20px; border-radius:12px; background:var(--soft);
+             border:1px solid var(--line); font-weight:600; }
+  a { color:var(--accent); }
+  footer { margin-top:56px; padding-top:24px; border-top:1px solid var(--line); color:var(--sub); font-size:14px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand"><i></i> Scrolling Screenshot</div>
+
+  <h1>Privacy Policy</h1>
+  <p class="updated">Last updated: 5 August 2026</p>
+
+  <p>Scrolling Screenshot is a browser extension that captures the page the user chooses and
+     saves the resulting image on the user's own device.</p>
+
+  <div class="callout">The extension collects no data at all.</div>
+
+  <h2>Data collection</h2>
+  <p>It does not collect, sell, transmit, or share personal information. It does not send
+     screenshots, webpage content, browsing history, account information, analytics events,
+     telemetry, or usage data to any server. There is no account, no sign-in, and no network
+     request of any kind at runtime.</p>
+
+  <h2>Local data use</h2>
+  <p>When the user starts a capture, the extension temporarily reads the active tab in order to
+     measure the page, identify which area scrolls, scroll it, capture each visible screen, and
+     stitch those screens into one long image. The page's original scroll position and styles are
+     restored when the capture ends, is cancelled, or fails.</p>
+  <p>Generated screenshots are saved to the user's local downloads folder through the browser's
+     download API.</p>
+  <p>The most recent result is cached in the extension's own IndexedDB storage so the preview tab
+     can display it. That cache never leaves the device and is overwritten by the next capture.</p>
+
+  <h2>Permissions</h2>
+  <ul>
+    <li><code>activeTab</code> — granted only when the user invokes the extension, and only for the
+        single tab being captured. It lapses when the capture finishes.</li>
+    <li><code>scripting</code> — injects the extension's own bundled functions into that tab to
+        measure the page, identify the scroll target, scroll it, wait for content to render,
+        temporarily hide sticky headers and footers, and restore the page.</li>
+    <li><code>downloads</code> — saves the finished image to the user's downloads folder.</li>
+  </ul>
+  <p>The extension requests <strong>no host permissions</strong>, so it has no standing access to
+     any website.</p>
+
+  <h2>Remote code</h2>
+  <p>The extension does not load or execute remotely hosted code. All JavaScript, HTML, CSS and
+     image assets are included in the extension package that was reviewed by the store.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>Any change will be published on this page with an updated date above.</p>
+
+  <h2>Contact</h2>
+  <p>For privacy questions or support: <a href="mailto:weixianfuln@gmail.com">weixianfuln@gmail.com</a></p>
+
+  <footer>Scrolling Screenshot — Full Page &amp; In-Page Scroll Area Capture</footer>
+</main>
+</body>
+</html>

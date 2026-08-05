@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Operations Console</title>
+<style>
+  :root { --ink:#151922; --sub:#69727f; --line:#e5e8ef; --accent:#2f6df6; --soft:#f7f9fc; --ok:#12a06f; --warn:#e08a1e; --bad:#e04b4b; }
+  * { box-sizing:border-box; }
+  html, body { height:100%; margin:0; overflow:hidden; }
+  body { color:var(--ink); background:var(--soft);
+         font:14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+  /* App shell: the document never scrolls — the panel inside does. */
+  .shell { position:fixed; inset:0; display:flex; }
+  aside { width:224px; flex:0 0 224px; background:#101623; color:#c9d3e4; padding:18px 14px; overflow-y:auto; }
+  .logo { display:flex; align-items:center; gap:9px; color:#fff; font-weight:800; margin:2px 6px 22px; }
+  .logo i { width:22px; height:22px; border-radius:6px; background:linear-gradient(135deg,#2f6df6,#12b3a0); }
+  .navgroup { color:#5f6d85; font-size:11px; letter-spacing:.09em; text-transform:uppercase; margin:18px 8px 8px; }
+  .navitem { display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:7px; font-weight:600; font-size:13px; }
+  .navitem.on { background:#1c2740; color:#fff; }
+  .navitem span.dot { width:7px; height:7px; border-radius:50%; background:#3b496a; }
+  .navitem.on span.dot { background:#4d8bff; }
+  main { flex:1; min-width:0; display:flex; flex-direction:column; background:#fff; }
+  .topbar { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+            padding:14px 22px; border-bottom:1px solid var(--line); }
+  .topbar h1 { margin:0; font-size:17px; letter-spacing:-.01em; }
+  .topbar .meta { color:var(--sub); font-size:12px; margin-top:3px; }
+  .btn { padding:7px 13px; border:1px solid var(--line); border-radius:7px; background:#fff; font-weight:650; font-size:13px; }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .cards { flex:0 0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:16px 22px; }
+  .card { border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .card .label { color:var(--sub); font-size:11px; letter-spacing:.05em; text-transform:uppercase; }
+  .card .value { font-size:24px; font-weight:750; letter-spacing:-.02em; margin-top:4px; }
+  .card .delta { font-size:12px; font-weight:650; margin-top:2px; }
+  .up { color:var(--ok); } .down { color:var(--bad); }
+  /* THE inner scroll area — this is what the extension detects. */
+  .panel { flex:1; min-height:0; margin:0 22px 22px; border:1px solid var(--line); border-radius:10px; display:flex; flex-direction:column; }
+  .panel-head { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+                padding:11px 14px; border-bottom:1px solid var(--line); }
+  .panel-head strong { font-size:13px; }
+  .panel-head .hint { color:var(--sub); font-size:12px; }
+  #grid { flex:1; min-height:0; overflow-y:auto; }
+  table { width:100%; border-collapse:collapse; }
+  thead th { position:sticky; top:0; background:#fbfcfe; z-index:1; text-align:left; padding:9px 14px;
+             border-bottom:1px solid var(--line); color:var(--sub); font-size:11px; letter-spacing:.05em; text-transform:uppercase; }
+  td { padding:10px 14px; border-bottom:1px solid #f0f2f7; font-size:13px; white-space:nowrap; }
+  td.mono { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--sub); font-size:12px; }
+  .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:700; }
+  .pill.ok { background:#e6f6ef; color:var(--ok); } .pill.warn { background:#fdf2e2; color:var(--warn); }
+  .pill.bad { background:#fdeaea; color:var(--bad); }
+  .bar { height:6px; border-radius:3px; background:#eef1f6; width:120px; overflow:hidden; }
+  .bar i { display:block; height:100%; background:linear-gradient(90deg,#2f6df6,#12b3a0); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <div class="logo"><i></i> Operations</div>
+    <div class="navgroup">Monitor</div>
+    <div class="navitem on"><span class="dot"></span> Deployments</div>
+    <div class="navitem"><span class="dot"></span> Incidents</div>
+    <div class="navitem"><span class="dot"></span> Services</div>
+    <div class="navitem"><span class="dot"></span> Alerts</div>
+    <div class="navgroup">Manage</div>
+    <div class="navitem"><span class="dot"></span> Environments</div>
+    <div class="navitem"><span class="dot"></span> Access</div>
+    <div class="navitem"><span class="dot"></span> Billing</div>
+    <div class="navgroup">Reports</div>
+    <div class="navitem"><span class="dot"></span> Weekly review</div>
+    <div class="navitem"><span class="dot"></span> Audit log</div>
+  </aside>
+
+  <main>
+    <div class="topbar">
+      <div>
+        <h1>Deployments</h1>
+        <div class="meta">Production · last 30 days · 248 records</div>
+      </div>
+      <div><button class="btn">Filter</button> <button class="btn primary">Export</button></div>
+    </div>
+
+    <div class="cards">
+      <div class="card"><div class="label">Deploys</div><div class="value">248</div><div class="delta up">+18% vs prior</div></div>
+      <div class="card"><div class="label">Success rate</div><div class="value">97.2%</div><div class="delta up">+1.4 pts</div></div>
+      <div class="card"><div class="label">Median duration</div><div class="value">4m 12s</div><div class="delta down">+22s</div></div>
+      <div class="card"><div class="label">Rollbacks</div><div class="value">7</div><div class="delta up">-3</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <strong>Recent deployments</strong>
+        <span class="hint">Scrolls inside this panel — the page itself does not scroll</span>
+      </div>
+      <div id="grid">
+        <table>
+          <thead><tr><th>Ref</th><th>Service</th><th>Environment</th><th>Author</th><th>Duration</th><th>Coverage</th><th>Status</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+  const services = ["checkout-api","billing-worker","search-index","web-frontend","auth-gateway","media-pipeline",
+                    "notify-fanout","reporting-etl","edge-router","session-store"];
+  const envs = ["production","staging","canary"];
+  const people = ["A. Okafor","M. Lindqvist","R. Haddad","J. Moreau","S. Nakamura","P. Vargas","T. Bergman","N. Adeyemi"];
+  const statuses = [["ok","Succeeded",70],["warn","Degraded",18],["bad","Rolled back",12]];
+  const rows = document.getElementById("rows");
+  // Deterministic pseudo-random so the generated screenshots are reproducible.
+  let seed = 20260805;
+  const rand = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  for (let i = 0; i < 90; i++) {
+    const roll = rand() * 100;
+    let s = statuses[0], acc = 0;
+    for (const st of statuses) { acc += st[2]; if (roll < acc) { s = st; break; } }
+    const cov = 62 + Math.floor(rand() * 37);
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td class="mono">#${(4820 - i).toString()}</td>` +
+      `<td><strong>${services[Math.floor(rand() * services.length)]}</strong></td>` +
+      `<td>${envs[Math.floor(rand() * envs.length)]}</td>` +
+      `<td>${people[Math.floor(rand() * people.length)]}</td>` +
+      `<td class="mono">${1 + Math.floor(rand() * 9)}m ${String(Math.floor(rand() * 60)).padStart(2, "0")}s</td>` +
+      `<td><div class="bar"><i style="width:${cov}%"></i></div></td>` +
+      `<td><span class="pill ${s[0]}">${s[1]}</span></td>`;
+    rows.appendChild(tr);
+  }
+</script>
+</body>
+</html>
