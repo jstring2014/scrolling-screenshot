@@ -12,20 +12,27 @@
 // Skips (exit 0) when neither playwright-core nor a browser binary is present,
 // so `npm test` stays green on machines without them.
 
-import { access, cp, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-
-const ROOT = resolve(".");
-const SCREENS = Number(process.env.E2E_SCREENS || 6);
-const FIXTURE_URL = "https://fixture.localtest/tall.html";
-const require = createRequire(import.meta.url);
 
 function skip(reason) {
   console.log(`e2e capture test skipped: ${reason}`);
   process.exit(0);
 }
+
+// fs.cp and friends need Node 18+. Machines that juggle Node versions (n/nvm)
+// sometimes run this under an ancient default — skip cleanly instead of dying
+// on an import binding error. fs/promises is therefore imported dynamically.
+if (Number(process.versions.node.split(".")[0]) < 18) {
+  skip(`Node ${process.versions.node} is too old (need >= 18)`);
+}
+const { access, cp, mkdtemp, readdir, readFile, rm, writeFile } = await import("node:fs/promises");
+
+const ROOT = resolve(".");
+const SCREENS = Number(process.env.E2E_SCREENS || 6);
+const FIXTURE_URL = "https://fixture.localtest/tall.html";
+const require = createRequire(import.meta.url);
 
 let chromium;
 for (const id of ["playwright", "playwright-core", "/usr/local/lib/node_modules/@playwright/cli/node_modules/playwright-core"]) {
