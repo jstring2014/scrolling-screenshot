@@ -96,6 +96,7 @@ testManifest.host_permissions = ["<all_urls>"];
 await writeFile(join(extDir, "manifest.json"), JSON.stringify(testManifest, null, 2));
 
 const fixtureHtml = await readFile(join(ROOT, "tools/e2e-fixtures/tall.html"), "utf8");
+const iframeHostHtml = await readFile(join(ROOT, "tools/e2e-fixtures/iframe-host.html"), "utf8");
 
 const context = await chromium.launchPersistentContext(userDataDir, {
   executablePath,
@@ -112,9 +113,11 @@ const context = await chromium.launchPersistentContext(userDataDir, {
 });
 
 try {
-  await context.route(`${FIXTURE_URL}*`, (route) =>
-    route.fulfill({ status: 200, contentType: "text/html; charset=utf-8", body: fixtureHtml })
-  );
+  await context.route("https://fixture.localtest/**", (route) => {
+    const path = new URL(route.request().url()).pathname;
+    const body = path === "/iframe-host.html" ? iframeHostHtml : fixtureHtml;
+    return route.fulfill({ status: 200, contentType: "text/html; charset=utf-8", body });
+  });
 
   let [worker] = context.serviceWorkers();
   if (!worker) worker = await context.waitForEvent("serviceworker", { timeout: 15000 });
@@ -276,6 +279,79 @@ try {
     check(Boolean(rendered.sample && rendered.sample.trim()), `${pageName}: first localized node is empty`);
     await extPage.close();
   }
+
+  // ---- iframe fallback: the top document is one non-scrolling screen and the
+  // content lives in a same-origin iframe. The capture must find the frame,
+  // scroll it, and crop the stitched image to the frame's on-screen rect.
+  await page.goto("https://fixture.localtest/iframe-host.html");
+  await page.bringToFront();
+  await page.waitForTimeout(600);
+  const iframeInfo = await page.evaluate(() => {
+    const f = document.querySelector("iframe");
+    const r = f.getBoundingClientRect();
+    const inner = f.contentDocument.body.dataset;
+    return { rect: { w: r.width, h: r.height, top: r.top }, screens: Number(inner.screens), bandHeight: Number(inner.bandHeight) };
+  });
+
+  const fres = await worker.evaluate(async () => {
+    const messages = [];
+    let error = null;
+    try {
+      await run({ postMessage: (m) => messages.push(m) }, { format: "png", hideFixedElements: true });
+    } catch (err) {
+      error = { code: err && err.code, message: String((err && err.message) || err) };
+    }
+    const images = await new Promise((res, rej) => {
+      const open = indexedDB.open("fullPageScreenshot", 1);
+      open.onerror = () => rej(open.error);
+      open.onsuccess = () => {
+        const db = open.result;
+        const tx = db.transaction("results", "readonly");
+        const req = tx.objectStore("results").get("latest");
+        req.onsuccess = () => res((req.result && req.result.images) || []);
+        req.onerror = () => rej(req.error);
+        tx.oncomplete = () => db.close();
+      };
+    });
+    const bmp = await createImageBitmap(images[0]);
+    const dims = { width: bmp.width, height: bmp.height };
+    const canvas = new OffscreenCanvas(1, bmp.height);
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(bmp, -Math.floor(bmp.width / 2), 0);
+    const data = ctx.getImageData(0, 0, 1, bmp.height).data;
+    const probes = [];
+    for (let y = 0; y < bmp.height; y++) probes.push(data[y * 4]);
+    bmp.close();
+    const done = messages.find((m) => m.type === "done");
+    return { error, done, progress: messages.filter((m) => m.type === "progress").length, dims, probes };
+  });
+
+  console.log(`iframe fixture: ${iframeInfo.screens} screens x ${iframeInfo.bandHeight}px inside a ${Math.round(iframeInfo.rect.w)}x${Math.round(iframeInfo.rect.h)} frame`);
+  check(!fres.error, `iframe capture threw: ${fres.error && (fres.error.code || fres.error.message)}`);
+  check(fres.done && !fres.done.frameLimited, "frameLimited should be false when the frame was captured");
+  check(fres.progress === iframeInfo.screens, `iframe: expected ${iframeInfo.screens} screens, got ${fres.progress}`);
+
+  const fShotH = Math.round(iframeInfo.bandHeight * dpr);
+  const expectedW = Math.round(iframeInfo.rect.w * dpr);
+  const expectedH = fShotH * iframeInfo.screens;
+  check(Math.abs(fres.dims.width - expectedW) <= 4, `iframe: stitched width ${fres.dims.width} != frame width ~${expectedW}`);
+  check(Math.abs(fres.dims.height - expectedH) <= iframeInfo.screens + 4, `iframe: stitched height ${fres.dims.height} != expected ~${expectedH}`);
+
+  let fMisplaced = 0;
+  const fSampled = [];
+  for (let band = 0; band < iframeInfo.screens; band++) {
+    const y = band * fShotH + Math.floor(fShotH / 2);
+    const expected = band * 3 + 3;
+    const actual = fres.probes[y];
+    fSampled.push(actual);
+    if (actual === undefined || Math.abs(actual - expected) > 1) fMisplaced += 1;
+  }
+  check(fMisplaced === 0, `iframe: ${fMisplaced}/${iframeInfo.screens} bands at wrong offsets (sampled: ${fSampled.join(",")})`);
+  // The host shell's black topbar sits outside the iframe rect and must not
+  // appear in the cropped result.
+  const fBlackRows = fres.probes.filter((r) => r === 0).length;
+  check(fBlackRows <= 4, `iframe: host topbar leaked into the crop (${fBlackRows} black rows)`);
+  console.log("iframe fallback capture verified");
 
   const perScreenMs = result.elapsedMs / Math.max(1, screens);
   console.log(`elapsed: ${(result.elapsedMs / 1000).toFixed(1)}s for ${screens} screens (${Math.round(perScreenMs)}ms/screen)`);

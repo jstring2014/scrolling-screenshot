@@ -152,6 +152,9 @@
   "doneStoppedEarly": {
     "message": "Scrolling stopped early, the long image may be incomplete"
   },
+  "doneFrameLimited": {
+    "message": "The page's main content sits in a protected embedded frame this extension can't reach, so the image may show only one screen."
+  },
   "donePreviewFailed": {
     "message": "Preview cache failed, but the image was saved"
   },

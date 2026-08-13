@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>iframe host fixture</title>
+<style>
+  /* App-shell that renders its real content inside an iframe (claude.ai
+     artifact layout): the top document is exactly one screen and never
+     scrolls, so the extension must find and capture the frame instead. */
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  #topbar { position: fixed; top: 0; left: 0; right: 0; height: 48px;
+            background: #000; color: #fff; font: 700 20px system-ui;
+            line-height: 48px; padding-left: 16px; z-index: 5; }
+  iframe { position: fixed; top: 48px; left: 0; width: 100%;
+           height: calc(100% - 48px); border: 0; }
+</style>
+</head>
+<body>
+<div id="topbar">HOST SHELL</div>
+<iframe src="/tall.html?screens=4"></iframe>
+</body>
+</html>

@@ -125,6 +125,7 @@ function onDone(msg) {
         ? t("doneTruncated", [String(msg.capturedScreens), String(msg.totalScreens || msg.maxScreens)])
         : "",
       msg.stoppedEarly ? t("doneStoppedEarly") : "",
+      msg.frameLimited ? t("doneFrameLimited") : "",
       msg.viewerReady ? "" : t("donePreviewFailed"),
     ].filter(Boolean).join(" · ");
   openImgBtn.disabled = !msg.viewerReady;

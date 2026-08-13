@@ -75,7 +75,37 @@ async function run(port, options) {
   }
 
   // 1. Prepare the page (hide scrollbar, freeze smooth-scroll) and read its metrics.
-  const metrics = await exec(tab.id, prepPage);
+  let frameId; // undefined = capture the top-level document
+  let frameLimited = false;
+  let metrics = await exec(tab.id, prepPage);
+
+  // Some pages keep the top document at exactly one screen and render the real
+  // content inside an <iframe> (claude.ai artifacts, embedded editors and
+  // documents, legacy framesets). If the top frame has nothing to scroll, look
+  // for the largest scrollable sub-frame and capture that instead — the user
+  // asked for the page's content, not for whichever frame happens to be on top.
+  if (metrics.scrollMode === "page" && metrics.totalHeight <= metrics.viewportHeight * 1.5) {
+    const sub = await findScrollableSubFrame(tab.id).catch(() => null);
+    if (sub) {
+      await exec(tab.id, restorePage).catch(() => {}); // undo top-frame prep
+      frameId = sub.frameId;
+      metrics = await exec(tab.id, prepPage, [], frameId);
+      // Screens come from captureVisibleTab, which photographs the top-level
+      // viewport — so clip to where the iframe sits in it, and measure scale
+      // against the top-level viewport, not the frame's own.
+      metrics.captureRect = composeRects(sub.rect, metrics.captureRect);
+      metrics.viewportHeight = Math.max(1, Math.floor(metrics.captureRect.height));
+      metrics.viewportWidth = Math.max(1, Math.floor(metrics.captureRect.width));
+      metrics.browserViewportWidth = sub.rect.vw;
+      metrics.browserViewportHeight = sub.rect.vh;
+      metrics.scrollMode = "container"; // same user-facing semantics
+    } else if (await exec(tab.id, hasLargeIframe).catch(() => false)) {
+      // There's a big embedded frame we couldn't reach (likely cross-origin
+      // under activeTab). Capturing one screen is all we can do — but say so
+      // instead of presenting it as a complete capture.
+      frameLimited = true;
+    }
+  }
   const { viewportHeight } = metrics;
 
   const shots = []; // { y, blob }
@@ -94,7 +124,7 @@ async function run(port, options) {
       stage: "stageLoading",
       code: metrics.scrollMode === "container" ? "statusContainerDetected" : "statusLoadingPage",
     });
-    const grownHeight = await exec(tab.id, preScroll, [viewportHeight, MAX_SCREENS, PRESCROLL_STEP_MS]);
+    const grownHeight = await exec(tab.id, preScroll, [viewportHeight, MAX_SCREENS, PRESCROLL_STEP_MS], frameId);
     totalHeight = Math.max(metrics.totalHeight, grownHeight || 0);
     totalScreens = Math.max(1, Math.ceil(totalHeight / viewportHeight));
     const steps = Math.min(MAX_SCREENS, totalScreens);
@@ -114,7 +144,7 @@ async function run(port, options) {
       if (!(await ensureTargetTabActive(port, tab.id, tab.windowId))) { cancelled = true; break; }
       const targetY = i * viewportHeight;
       const shouldHideFixed = hideFixedElements && (i > 0 || metrics.scrollMode === "container");
-      const actualY = await exec(tab.id, scrollToY, [targetY, shouldHideFixed]);
+      const actualY = await exec(tab.id, scrollToY, [targetY, shouldHideFixed], frameId);
 
       // The scroll position didn't move: either we're at the real bottom (the
       // measured height was too optimistic) or the detected scroll area can't
@@ -125,7 +155,7 @@ async function run(port, options) {
 
       // Wait until this screen's lazy images/content have actually rendered
       // (not just a fixed guess) before capturing.
-      await exec(tab.id, waitForRender, [MAX_RENDER_WAIT_MS]);
+      await exec(tab.id, waitForRender, [MAX_RENDER_WAIT_MS], frameId);
       if (active && active.cancelled) { cancelled = true; break; }
 
       // Respect captureVisibleTab's rate limit — the render wait usually already
@@ -146,7 +176,7 @@ async function run(port, options) {
     }
   } finally {
     // 4. Always restore the page to its original state.
-    await exec(tab.id, restorePage).catch(() => {});
+    await exec(tab.id, restorePage, [], frameId).catch(() => {});
   }
 
   if (cancelled || (active && active.cancelled)) { safePost(port, { type: "cancelled" }); return; }
@@ -200,6 +230,7 @@ async function run(port, options) {
     preview,
     truncated: Boolean(truncated),
     stoppedEarly: Boolean(stoppedEarly),
+    frameLimited: Boolean(frameLimited),
     capturedScreens,
     totalScreens,
     maxScreens: MAX_SCREENS,
@@ -330,6 +361,56 @@ function blobToDataUrl(blob) {
   });
 }
 
+// Probe every frame we can reach and return the most plausible content frame:
+// scrollable (or hosting a big internal scroller), with the largest viewport.
+// Under activeTab, cross-origin frames may be unreachable — they simply don't
+// appear in the results, and we fall back to the top frame.
+async function findScrollableSubFrame(tabId) {
+  let results;
+  try {
+    results = await chrome.scripting.executeScript({
+      target: { tabId, allFrames: true },
+      func: probeFrame,
+    });
+  } catch (_) {
+    return null;
+  }
+
+  let best = null;
+  for (const r of results || []) {
+    const p = r && r.result;
+    if (!p || r.frameId === 0) continue;
+    // Tracking pixels and other degenerate frames scroll "1.5x their height"
+    // trivially — demand real size and a real scrollable distance.
+    if (p.innerWidth < 200 || p.innerHeight < 200) continue;
+    if (p.scrollHeight - p.innerHeight < 64 && !p.hasInnerScroller) continue;
+    const area = p.innerWidth * p.innerHeight;
+    if (!best || area > best.area) best = { frameId: r.frameId, probe: p, area };
+  }
+  if (!best) return null;
+
+  // Match the frame back to its <iframe> element in the top document to learn
+  // where it sits in the viewport we photograph. The frame's inner viewport has
+  // the same size as the element's client box, which is enough to identify it.
+  const rect = await exec(tabId, locateIframe, [best.probe.innerWidth, best.probe.innerHeight]);
+  if (!rect) return null;
+  return { frameId: best.frameId, rect };
+}
+
+// The frame's own capture rect (a scroller inside the iframe) is relative to
+// the iframe's viewport; offset it by where the iframe sits in the top one.
+function composeRects(outer, inner) {
+  if (!inner) return outer;
+  return {
+    left: outer.left + inner.left,
+    top: outer.top + inner.top,
+    width: Math.max(1, Math.min(inner.width, outer.width - inner.left)),
+    height: Math.max(1, Math.min(inner.height, outer.height - inner.top)),
+    vw: outer.vw,
+    vh: outer.vh,
+  };
+}
+
 async function isTargetTabActive(tabId, windowId) {
   const [current] = await chrome.tabs.query({ active: true, windowId });
   return Boolean(current && current.id === tabId);
@@ -391,9 +472,10 @@ async function clearLatestImages() {
   });
 }
 
-function exec(tabId, func, args = []) {
+function exec(tabId, func, args = [], frameId) {
+  const target = frameId != null ? { tabId, frameIds: [frameId] } : { tabId };
   return chrome.scripting
-    .executeScript({ target: { tabId }, func, args })
+    .executeScript({ target, func, args })
     .then((res) => res && res[0] && res[0].result);
 }
 
@@ -415,6 +497,73 @@ function stamp() {
 }
 
 // ---- functions injected into the page ----
+
+// Runs in EVERY frame: report whether this frame has meaningful scrollable
+// content, either the document itself or a large scroller inside it.
+function probeFrame() {
+  const de = document.documentElement;
+  const body = document.body;
+  const scrollHeight = Math.max(de.scrollHeight, body ? body.scrollHeight : 0);
+  let hasInnerScroller = false;
+  if (body) {
+    for (const el of body.querySelectorAll("*")) {
+      if (el.scrollHeight - el.clientHeight >= window.innerHeight) {
+        hasInnerScroller = true;
+        break;
+      }
+    }
+  }
+  return {
+    innerWidth: window.innerWidth,
+    innerHeight: window.innerHeight,
+    scrollHeight,
+    hasInnerScroller,
+  };
+}
+
+// Runs in the TOP frame: find the visible <iframe> element whose client box
+// matches the chosen frame's inner viewport, and return its on-screen rect.
+function locateIframe(w, h) {
+  let best = null;
+  let bestArea = 0;
+  for (const f of document.querySelectorAll("iframe")) {
+    if (f.clientWidth < 200 || f.clientHeight < 200) continue;
+    if (Math.abs(f.clientWidth - w) > 4 || Math.abs(f.clientHeight - h) > 4) continue;
+    const r = f.getBoundingClientRect();
+    const left = Math.max(0, r.left);
+    const top = Math.max(0, r.top);
+    const right = Math.min(window.innerWidth, r.right);
+    const bottom = Math.min(window.innerHeight, r.bottom);
+    const area = Math.max(0, right - left) * Math.max(0, bottom - top);
+    if (area > bestArea) {
+      bestArea = area;
+      best = {
+        left,
+        top,
+        width: Math.max(1, right - left),
+        height: Math.max(1, bottom - top),
+        vw: window.innerWidth,
+        vh: window.innerHeight,
+      };
+    }
+  }
+  return best;
+}
+
+// Runs in the TOP frame: is there a big embedded frame covering a meaningful
+// share of the viewport? Used to warn when we couldn't reach the content.
+function hasLargeIframe() {
+  for (const f of document.querySelectorAll("iframe")) {
+    const r = f.getBoundingClientRect();
+    const left = Math.max(0, r.left);
+    const top = Math.max(0, r.top);
+    const right = Math.min(window.innerWidth, r.right);
+    const bottom = Math.min(window.innerHeight, r.bottom);
+    const area = Math.max(0, right - left) * Math.max(0, bottom - top);
+    if (area >= window.innerWidth * window.innerHeight * 0.4) return true;
+  }
+  return false;
+}
 
 function prepPage() {
   const stateKey = "__fullPageScreenshotExtensionState__";
